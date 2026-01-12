@@ -1,0 +1,62 @@
+* { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background-color: #f0f2f5; margin: 0; padding: 15px; color: #333; }
+
+.app-container { max-width: 500px; margin: auto; }
+header { text-align: center; margin-bottom: 20px; }
+header h1 { margin: 0; color: #1a73e8; }
+header p { color: #666; font-size: 0.9rem; }
+
+.booking-card { 
+    background: white; 
+    padding: 20px; 
+    border-radius: 15px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+    margin-bottom: 25px;
+}
+
+.input-group { margin-bottom: 15px; }
+.input-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
+
+select, input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px; /* สำคัญ: ป้องกันมือถือซูมเข้าอัตโนมัติ */
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 15px;
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.btn-submit:hover { background-color: #1557b0; }
+
+.booking-item {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 6px solid #ccc;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* สีแยกตามประเภทรถ */
+.booking-item[data-car="Toyota Ativ"] { border-left-color: #ff4d4d; }
+.booking-item[data-car="Suzuki Ertiga"] { border-left-color: #4db8ff; }
+.booking-item[data-car="Toyota Hiace"] { border-left-color: #33cc33; }
+.booking-item[data-car="Vantury"] { border-left-color: #ffa31a; }
+
+.item-info b { display: block; font-size: 1.05rem; }
+.item-info span { font-size: 0.85rem; color: #777; }
+.item-date { font-weight: bold; color: #1a73e8; }

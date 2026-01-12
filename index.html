@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจองรถบริษัท - BookingcarRF</title>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0066ff;
+            --body-bg: #f0f4f9;
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            --color-red: #ff4d4d;
+            --color-green: #2ecc71;
+        }
+
+        * { box-sizing: border-box; font-family: 'Chakra Petch', sans-serif; }
+        body { background-color: var(--body-bg); margin: 0; padding: 0; min-height: 100vh; }
+
+        .main-content { width: 100%; max-width: 1200px; margin: auto; padding: 30px 15px; }
+
+        .header-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px; background: white; padding: 15px 25px;
+            border-radius: 15px; box-shadow: var(--card-shadow);
+        }
+
+        .dashboard-grid { display: grid; grid-template-columns: 320px 1fr; gap: 25px; }
+
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: var(--card-shadow); height: fit-content; }
+        .card-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 20px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+
+        .car-option {
+            background: #f8fbff; border: 1px solid #e1e8f0; padding: 18px; border-radius: 15px;
+            margin-bottom: 12px; cursor: pointer; display: flex; align-items: center; gap: 15px;
+            transition: all 0.2s ease; font-size: 1.05rem;
+        }
+        .car-option.selected { border-color: var(--primary-blue); background: #eef5ff; color: var(--primary-blue); font-weight: bold; }
+
+        #calendar { background: white; }
+        .fc-event { cursor: pointer; border: none !important; }
+        .event-pending { background-color: var(--color-red) !important; color: white !important; border-radius: 6px !important; padding: 3px 8px; }
+        .event-completed { background-color: var(--color-green) !important; color: white !important; border-radius: 6px !important; padding: 3px 8px; }
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+        .modal-content { background: white; width: 90%; max-width: 450px; margin: 15vh auto; padding: 35px; border-radius: 25px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        input, textarea { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #e1e8f0; border-radius: 12px; font-size: 16px; background: #f9fafb; outline: none; }
+        
+        .btn-group-vertical { display: flex; flex-direction: column; gap: 10px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        .btn-confirm { background: var(--primary-blue); color: white; }
+        .btn-success { background: var(--color-green); color: white; }
+        .btn-delete { background: var(--color-red); color: white; }
+        .btn-cancel { background: #f0f2f5; color: #555; }
+
+        @media (max-width: 992px) { .dashboard-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div class="main-content">
+        <div class="header-bar">
+            <h2 style="margin:0; color: var(--primary-blue);">🚗 BookingcarRF</h2>
+            <div style="text-align: right;">
+                <div style="font-weight: bold; font-size: 0.9rem;">ระบบจองรถบริษัท</div>
+                <div style="font-size: 0.8rem; color: #888;">สถานะ: <span style="color:var(--color-red)">●</span> จองแล้ว | <span style="color:var(--color-green)">●</span> ว่าง (ใช้เสร็จแล้ว)</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-title">เลือกคันที่ต้องการ</div>
+                <div id="carList">
+                    <div class="car-option selected" onclick="selectCar('Toyota Ativ', this)">🚙 Toyota Ativ</div>
+                    <div class="car-option" onclick="selectCar('Suzuki Ertiga', this)">🚙 Suzuki Ertiga</div>
+                    <div class="car-option" onclick="selectCar('Toyota Hiace', this)">🚐 Toyota Hiace</div>
+                    <div class="car-option" onclick="selectCar('TOYOTA Ventury', this)">🚐 TOYOTA Ventury</div>
+                </div>
+                <input type="hidden" id="carSelect" value="Toyota Ativ">
+                
+                <div style="margin-top: 25px; padding: 15px; background: #f0f7ff; border-left: 4px solid var(--primary-blue); border-radius: 8px; font-size: 0.85rem; color: #2c3e50; line-height: 1.6;">
+                    <b style="color: var(--primary-blue); font-size: 1rem;">📋 ขั้นตอนการจองรถ:</b> <br>
+                    1. <b>เลือกคันรถ</b> ที่ต้องการใช้งานจากรายการด้านบน <br>
+                    2. <b>คลิกที่วันที่ว่าง</b> ในปฏิทินเพื่อกรอกข้อมูลการจอง <br>
+                    3. <b>เมื่อใช้รถเสร็จ</b> ให้กลับมาคลิกที่รายการของคุณ แล้วเลือก <span style="color: #27ae60; font-weight:bold;">"ใช้งานเสร็จแล้ว"</span> เพื่อให้คนอื่นจองต่อได้
+                </div>
+            </div>
+
+            <div class="card" style="padding: 15px;">
+                <div id="calendar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="actionModal" class="modal">
+        <div class="modal-content">
+            <div id="modalTitle" style="font-size: 1.3rem; font-weight: bold; margin-bottom: 20px; color: #333;"></div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAhDNQrGffZhb5Y_ZMKcB5vK8q7I1gU2Rk",
+            authDomain: "bookingcarrf.firebaseapp.com",
+            projectId: "bookingcarrf",
+            storageBucket: "bookingcarrf.firebasestorage.app",
+            messagingSenderId: "438250066454",
+            appId: "1:438250066454:web:cd3cdf7fcdbf8b8f8f5b37",
+            databaseURL: "https://bookingcarrf-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const bookingsRef = ref(database, 'bookings');
+
+        let allBookings = [];
+        const modal = document.getElementById('actionModal');
+
+        const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+            initialView: 'dayGridMonth',
+            locale: 'th',
+            height: 'auto',
+            headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
+            dateClick: (info) => openBookingModal(info.dateStr),
+            eventClick: (info) => openManageModal(info.event),
+            events: []
+        });
+        calendar.render();
+
+        window.selectCar = (carName, element) => {
+            document.querySelectorAll('.car-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('carSelect').value = carName;
+            updateCalendar();
+        };
+
+        onValue(bookingsRef, (snapshot) => {
+            allBookings = [];
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                allBookings = Object.entries(data).map(([id, val]) => ({ id, ...val }));
+            }
+            updateCalendar();
+        });
+
+        function updateCalendar() {
+            const selectedCar = document.getElementById('carSelect').value;
+            const events = allBookings
+                .filter(b => b.car === selectedCar)
+                .map(b => ({
+                    id: b.id,
+                    title: `${b.status === 'completed' ? '✅' : '❌'} ${b.user}`,
+                    start: b.date,
+                    className: b.status === 'completed' ? 'event-completed' : 'event-pending',
+                    extendedProps: { user: b.user, reason: b.reason, status: b.status || 'pending' }
+                }));
+            calendar.removeAllEvents();
+            calendar.addEventSource(events);
+        }
+
+        function openBookingModal(dateStr) {
+            const today = new Date().toISOString().split('T')[0];
+            if (dateStr < today) return alert("ไม่สามารถจองย้อนหลังได้");
+            const isPending = allBookings.some(b => b.car === carSelect.value && b.date === dateStr && b.status !== 'completed');
+            if (isPending) return alert("วันนี้มีคนจองรถไปแล้วครับ");
+
+            document.getElementById('modalTitle').innerText = `จอง ${carSelect.value}\nวันที่ ${dateStr}`;
+            document.getElementById('modalBody').innerHTML = `
+                <input type="text" id="userName" placeholder="ชื่อผู้จอง">
+                <textarea id="bookingReason" placeholder="ไปที่ไหน / ธุระอะไร"></textarea>
+                <div class="btn-group-vertical">
+                    <button class="btn btn-confirm" onclick="confirmBooking('${dateStr}')">ยืนยันการจอง</button>
+                    <button class="btn btn-cancel" onclick="closeModal()">ปิดหน้าต่าง</button>
+                </div>
+            `;
+            modal.style.display = 'block';
+        }
+
+        function openManageModal(event) {
+            const status = event.extendedProps.status;
+            document.getElementById('modalTitle').innerText = `จัดการการจอง: ${event.extendedProps.user}`;
+            let actionButtons = '';
+            if (status === 'pending') {
+                actionButtons = `
+                    <button class="btn btn-success" onclick="completeBooking('${event.id}')">ใช้งานเสร็จแล้ว (รถว่าง)</button>
+                    <button class="btn btn-delete" onclick="deleteBooking('${event.id}')">ยกเลิกการจอง</button>
+                `;
+            } else {
+                actionButtons = `
+                    <p style="color:#27ae60; margin-bottom:15px;">ใช้งานเสร็จสิ้นแล้ว</p>
+                    <button class="btn btn-delete" onclick="deleteBooking('${event.id}')">ลบประวัตินี้</button>
+                `;
+            }
+            document.getElementById('modalBody').innerHTML = `
+                <div class="btn-group-vertical">
+                    ${actionButtons}
+                    <button class="btn btn-cancel" onclick="closeModal()">กลับ</button>
+                </div>
+            `;
+            modal.style.display = 'block';
+        }
+
+        window.confirmBooking = async (date) => {
+            const name = document.getElementById('userName').value.trim();
+            if (!name) return alert("กรุณาใส่ชื่อ");
+            await push(bookingsRef, {
+                car: carSelect.value,
+                user: name,
+                reason: document.getElementById('bookingReason').value.trim(),
+                date: date,
+                status: 'pending',
+                createdAt: Date.now()
+            });
+            closeModal();
+        };
+
+        window.completeBooking = async (id) => {
+            await update(ref(database, `bookings/${id}`), { status: 'completed' });
+            closeModal();
+        };
+
+        window.deleteBooking = async (id) => {
+            await remove(ref(database, `bookings/${id}`));
+            closeModal();
+        };
+
+        window.closeModal = () => modal.style.display = 'none';
+        window.onclick = (event) => { if (event.target == modal) closeModal(); };
+    </script>
+</body>
+</html>

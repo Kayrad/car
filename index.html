@@ -13,12 +13,12 @@
             --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
             --color-red: #ff4d4d;
             --color-green: #2ecc71;
+            --color-history: #6c757d;
         }
         * { box-sizing: border-box; font-family: 'Chakra Petch', sans-serif; }
         body { background-color: var(--body-bg); margin: 0; padding: 0; min-height: 100vh; }
         .main-content { width: 100%; max-width: 1200px; margin: auto; padding: 30px 15px; }
         
-        /* Header ปรับปรุงใหม่ ใส่โลโก้และชื่อ BookingCar */
         .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 15px 25px; border-radius: 15px; box-shadow: var(--card-shadow); }
         .logo-area { display: flex; align-items: center; gap: 12px; }
         .logo-img { height: 45px; width: auto; object-fit: contain; }
@@ -26,18 +26,32 @@
         .dashboard-grid { display: grid; grid-template-columns: 320px 1fr; gap: 25px; }
         .card { background: white; border-radius: 20px; padding: 25px; box-shadow: var(--card-shadow); height: fit-content; }
         .card-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 20px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        
         .car-option { background: #f8fbff; border: 1px solid #e1e8f0; padding: 18px; border-radius: 15px; margin-bottom: 12px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
         .car-option.selected { border-color: var(--primary-blue); background: #eef5ff; color: var(--primary-blue); font-weight: bold; }
         
+        .btn-history { background: #ffffff; border: 2px solid var(--color-history); color: var(--color-history); padding: 15px; border-radius: 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; font-weight: bold; width: 100%; margin-top: 10px; }
+        .btn-history:hover { background: var(--color-history); color: white; }
+
         #calendar { background: white; }
         .fc-event { cursor: pointer; border: none !important; }
         .event-pending { background-color: var(--color-red) !important; color: white !important; border-radius: 6px !important; padding: 3px 8px; }
         .event-completed { background-color: var(--color-green) !important; color: white !important; border-radius: 6px !important; padding: 3px 8px; }
         
+        /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
-        .modal-content { background: white; width: 90%; max-width: 450px; margin: 15vh auto; padding: 35px; border-radius: 25px; text-align: center; }
-        .modal-header-main { font-size: 1.4rem; font-weight: bold; color: #333; margin-bottom: 10px; }
-        .modal-header-sub { font-size: 1.05rem; color: #555; margin-bottom: 5px; text-align: left; background: #f8f9fa; padding: 10px 15px; border-radius: 8px; }
+        .modal-content { background: white; width: 95%; max-width: 550px; margin: 5vh auto; padding: 35px; border-radius: 25px; text-align: center; max-height: 85vh; overflow-y: auto; position: relative; }
+        
+        /* ปุ่มปิด X มุมขวาบน */
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; transition: 0.3s; line-height: 1; }
+        .close-btn:hover { color: var(--color-red); }
+
+        .filter-area { display: flex; gap: 10px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 15px; justify-content: center; align-items: center; }
+        .filter-select { padding: 8px; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; font-size: 0.9rem; }
+
+        .history-item { text-align: left; padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 10px; line-height: 1.5; background: #fff; border-radius: 10px; }
+        .history-date { font-weight: bold; color: var(--primary-blue); font-size: 1rem; }
+        .history-car { font-weight: bold; color: #333; }
         
         input, textarea { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #e1e8f0; border-radius: 12px; background: #f9fafb; outline: none; font-size: 16px; }
         .btn-group-vertical { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
@@ -46,6 +60,7 @@
         .btn-success { background: var(--color-green); color: white; }
         .btn-delete { background: var(--color-red); color: white; }
         .btn-cancel { background: #f0f2f5; color: #555; }
+        
         @media (max-width: 992px) { .dashboard-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -71,15 +86,12 @@
                     <div class="car-option" onclick="selectCar('Toyota Hiace', this)">🚐 Toyota Hiace</div>
                     <div class="car-option" onclick="selectCar('TOYOTA Ventury', this)">🚐 TOYOTA Ventury</div>
                 </div>
+                <button class="btn-history" onclick="openHistoryModal()">📜 ประวัติการใช้งานรถ</button>
                 <input type="hidden" id="carSelect" value="Toyota Ativ">
-                
                 <div style="margin-top: 25px; padding: 15px; background: #f0f7ff; border-left: 4px solid var(--primary-blue); border-radius: 8px; font-size: 0.85rem; color: #2c3e50; line-height: 1.6;">
                     <b style="color: var(--primary-blue); font-size: 1rem;">📋 วิธีใช้งาน:</b> <br>
                     1. <b>การจองรถ:</b> คลิกที่ช่องวันที่ว่าง หรือช่องที่มีแถบสีเขียว <br>
-                    2. <b>การจัดการ:</b> คลิกที่แถบสีแดงเพื่อแจ้ง "ใช้งานเสร็จ" หรือ "ยกเลิก" <br><br>
-                    <b style="color: var(--primary-blue);">💡 ความหมายของสี:</b> <br>
-                    🔴 <b style="color: var(--color-red);">แถบสีแดง:</b> มีคนจองแล้ว (รถไม่ว่าง) <br>
-                    🟢 <b style="color: var(--color-green);">แถบสีเขียว:</b> ใช้งานเสร็จแล้ว (รถว่างจองทับได้)
+                    2. <b>การจัดการ:</b> คลิกที่แถบสีแดงเพื่อแจ้ง "ใช้งานเสร็จ" หรือ "ยกเลิก"
                 </div>
             </div>
             <div class="card" style="padding: 15px;"><div id="calendar"></div></div>
@@ -88,8 +100,30 @@
 
     <div id="actionModal" class="modal">
         <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
             <div id="modalHeaderArea"></div>
             <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeHistoryModal()">&times;</span>
+            <div class="modal-header-main">📜 ประวัติการใช้งานรถ</div>
+            <div class="filter-area">
+                <span>เลือกช่วงเวลา:</span>
+                <select id="filterMonth" class="filter-select" onchange="renderHistory()">
+                    <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option>
+                    <option value="03">มีนาคม</option><option value="04">เมษายน</option>
+                    <option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
+                    <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option>
+                    <option value="09">กันยายน</option><option value="10">ตุลาคม</option>
+                    <option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+                </select>
+                <select id="filterYear" class="filter-select" onchange="renderHistory()">
+                </select>
+            </div>
+            <div id="historyList"></div>
         </div>
     </div>
 
@@ -112,6 +146,7 @@
         const bookingsRef = ref(database, 'bookings');
         let allBookings = [];
         const modal = document.getElementById('actionModal');
+        const historyModal = document.getElementById('historyModal');
 
         const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
             initialView: 'dayGridMonth',
@@ -123,6 +158,16 @@
             events: []
         });
         calendar.render();
+
+        const yearSelect = document.getElementById('filterYear');
+        const currentYear = new Date().getFullYear();
+        for(let i = currentYear - 2; i <= currentYear + 2; i++) {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.innerHTML = i + 543;
+            if(i === currentYear) opt.selected = true;
+            yearSelect.appendChild(opt);
+        }
 
         function handleInteraction(dateStr) {
             const selectedCar = document.getElementById('carSelect').value;
@@ -165,37 +210,70 @@
             calendar.addEventSource(events);
         }
 
+        window.openHistoryModal = () => {
+            const now = new Date();
+            document.getElementById('filterMonth').value = String(now.getMonth() + 1).padStart(2, '0');
+            document.getElementById('filterYear').value = now.getFullYear();
+            renderHistory();
+            historyModal.style.display = 'block';
+        };
+
+        window.renderHistory = () => {
+            const hList = document.getElementById('historyList');
+            const targetMonth = document.getElementById('filterMonth').value;
+            const targetYear = document.getElementById('filterYear').value;
+            hList.innerHTML = "";
+
+            // กรองข้อมูลตามเดือนและปีที่เลือก
+            const filtered = allBookings.filter(item => {
+                const [y, m] = item.date.split('-');
+                return y === targetYear && m === targetMonth;
+            }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (filtered.length === 0) {
+                hList.innerHTML = "<p style='padding:20px; color:#999;'>ไม่มีข้อมูลการจองในเดือนนี้</p>";
+                return;
+            }
+
+            filtered.forEach(item => {
+                // แปลงวันที่จาก YYYY-MM-DD เป็น DD/MM/YYYY (พ.ศ.)
+                const [y, m, d] = item.date.split('-');
+                const thaiYear = parseInt(y) + 543;
+                const formattedDate = `${d}/${m}/${thaiYear}`;
+
+                // กำหนดข้อความสถานะและสี
+                const isDone = item.status === 'completed';
+                const statusText = isDone ? "(ใช้งานเสร็จแล้ว)" : "(กำลังใช้งาน)";
+                const statusColor = isDone ? "var(--color-green)" : "var(--color-red)";
+
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div class="history-date">
+                        ${formattedDate} 
+                        <span style="color: ${statusColor}; font-size: 0.9rem; margin-left: 5px;">${statusText}</span>
+                    </div>
+                    <div class="history-car">🚗 ${item.car}</div>
+                    <div><b>ชื่อผู้จอง :</b> ${item.user}</div>
+                    <div><b>เหตุผล :</b> ${item.reason || '-'}</div>
+                `;
+                hList.appendChild(div);
+            });
+        };
+
+        window.closeHistoryModal = () => { historyModal.style.display = 'none'; };
+
         function openBookingModal(dateStr) {
             const today = new Date().toISOString().split('T')[0];
             if (dateStr < today) return alert("ไม่สามารถจองย้อนหลังได้");
-            
-            document.getElementById('modalHeaderArea').innerHTML = `
-                <div class="modal-header-main">จองรถ</div>
-                <div class="modal-header-sub">รถ : ${document.getElementById('carSelect').value}</div>
-                <div class="modal-header-sub">วันที่ : ${dateStr}</div>
-            `;
-            document.getElementById('modalBody').innerHTML = `
-                <input type="text" id="userName" placeholder="ชื่อผู้จอง" autocomplete="off">
-                <textarea id="bookingReason" placeholder="เหตุผลการจอง"></textarea>
-                <div class="btn-group-vertical">
-                    <button class="btn btn-confirm" onclick="confirmBooking('${dateStr}')">ยืนยันการจอง</button>
-                    <button class="btn btn-cancel" onclick="closeModal()">ปิดหน้าต่าง</button>
-                </div>`;
+            document.getElementById('modalHeaderArea').innerHTML = `<div class="modal-header-main">จองรถ</div><div class="modal-header-sub">รถ : ${document.getElementById('carSelect').value}</div><div class="modal-header-sub">วันที่ : ${dateStr}</div>`;
+            document.getElementById('modalBody').innerHTML = `<input type="text" id="userName" placeholder="ชื่อผู้จอง" autocomplete="off"><textarea id="bookingReason" placeholder="เหตุผลการจอง"></textarea><div class="btn-group-vertical"><button class="btn btn-confirm" onclick="confirmBooking('${dateStr}')">ยืนยันการจอง</button></div>`;
             modal.style.display = 'block';
         }
 
         function openManageModal(booking) {
-            document.getElementById('modalHeaderArea').innerHTML = `
-                <div class="modal-header-main">จัดการการจอง</div>
-                <div class="modal-header-sub">ชื่อผู้จอง : ${booking.user}</div>
-                <div class="modal-header-sub">เหตุผล : ${booking.reason || '-'}</div>
-            `;
-            document.getElementById('modalBody').innerHTML = `
-                <div class="btn-group-vertical">
-                    <button class="btn btn-success" onclick="completeBooking('${booking.id}')">ใช้งานเสร็จแล้ว (รถว่าง)</button>
-                    <button class="btn btn-delete" onclick="deleteBooking('${booking.id}')">ยกเลิกการจอง</button>
-                    <button class="btn btn-cancel" onclick="closeModal()">กลับ</button>
-                </div>`;
+            document.getElementById('modalHeaderArea').innerHTML = `<div class="modal-header-main">จัดการการจอง</div><div class="modal-header-sub">ชื่อผู้จอง : ${booking.user}</div><div class="modal-header-sub">เหตุผล : ${booking.reason || '-'}</div>`;
+            document.getElementById('modalBody').innerHTML = `<div class="btn-group-vertical"><button class="btn btn-success" onclick="completeBooking('${booking.id}')">ใช้งานเสร็จแล้ว (รถว่าง)</button><button class="btn btn-delete" onclick="deleteBooking('${booking.id}')">ยกเลิกการจอง</button></div>`;
             modal.style.display = 'block';
         }
 
@@ -209,7 +287,7 @@
         window.completeBooking = async (id) => { await update(ref(database, `bookings/${id}`), { status: 'completed' }); closeModal(); };
         window.deleteBooking = async (id) => { if (confirm("ยืนยันการลบรายการนี้?")) { await remove(ref(database, `bookings/${id}`)); closeModal(); } };
         window.closeModal = () => modal.style.display = 'none';
-        window.onclick = (event) => { if (event.target == modal) closeModal(); };
+        window.onclick = (event) => { if (event.target == modal) closeModal(); if (event.target == historyModal) closeHistoryModal(); };
     </script>
 </body>
 </html>
